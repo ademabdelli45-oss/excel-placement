@@ -358,9 +358,12 @@ function speak(lines,onDone){if(!('speechSynthesis' in window)){toast('This brow
 
 /* ============ speaking ============ */
 function spItems(){const s=cur();if(s.kidsPrompts)return s.kidsPrompts.map((p,i)=>({part:'K'+(i+1),q:p.q,sec:p.sec,scene:p.scene}));
-  const L=s.warmup.map((w,i)=>({part:'W'+(i+1),q:w.q,sec:w.sec,title:'Warm-up'}));
-  L.push({part:'T1',q:s.prompt.text,points:s.prompt.points,sec:s.talk,prep:s.prep,title:'Long turn'});
-  (S.probes||[]).forEach((p,i)=>L.push({part:'F'+(i+1),q:p,sec:s.probeSec,title:'Follow-up'}));return L;}
+  const W=s.warmup.map((w,i)=>({part:'W'+(i+1),q:w.q,sec:w.sec,title:'Warm-up'})),L=W.slice(0,1);
+  /* Progressive speaking, never more than 3 recordings for anyone: 1) warm-up, 2) a task chosen by how much they spoke in the warm-up (at least half the time = long turn, otherwise the easier second warm-up question), 3) one follow-up question picked by their grammar level. */
+  const w1=S.rec[W[0].part];let hi=!!S.rec.T1;if(!hi&&!S.rec.W2&&w1)hi=(w1.sec||0)>=0.5*(W[0].sec||40);
+  const easy=W[1]||null,tl={part:'T1',q:s.prompt.text,points:s.prompt.points,sec:s.talk,prep:s.prep,title:'Long turn'};
+  L.push(hi||!easy?tl:easy);
+  (S.probes||[]).slice(0,1).forEach((p,i)=>L.push({part:'F'+(i+1),q:p,sec:s.probeSec,title:'Follow-up'}));return L;}
 let media=null,rec=null,chunks=[],recTimer=null,recStart=0,blobs={},prepTimer=null,audioCtx=null,analyser=null;
 async function getMic(){if(media&&media.active)return media;media=await navigator.mediaDevices.getUserMedia({audio:{channelCount:1,echoCancellation:true,noiseSuppression:true,autoGainControl:true}});return media;}
 function pickMime(){const c=['audio/webm;codecs=opus','audio/ogg;codecs=opus','audio/mp4','audio/webm'];for(const m of c)if(window.MediaRecorder&&MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(m))return m;return '';}
