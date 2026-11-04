@@ -460,3 +460,27 @@ render();
 </script>
 </body>
 </html>
+
+<script>
+/* Exam guard: blocks copy, cut, paste, right-click, select-all, print and dev-tool keys during the test; counts page leaves. */
+(function(){var on=false,box=null,tm=0,AC={leaves:0,blocked:0};
+function ok(t){return !!t&&(t.tagName==='TEXTAREA'||t.tagName==='INPUT');}
+function say(m){try{if(!box){box=document.createElement('div');box.style.cssText='position:fixed;left:50%;top:14px;transform:translateX(-50%);background:#7a1f1f;color:#fff;padding:10px 16px;border-radius:10px;font:600 14px Arial,sans-serif;z-index:2147483647;max-width:90%;text-align:center;box-shadow:0 4px 18px #0006;display:none';document.body.appendChild(box);}box.textContent=m;box.style.display='block';clearTimeout(tm);tm=setTimeout(function(){box.style.display='none';},3500);}catch(e){}}
+function stop(e,m){if(!on)return;e.preventDefault();e.stopPropagation();AC.blocked++;if(m)say(m);}
+['copy','cut'].forEach(function(n){document.addEventListener(n,function(e){stop(e,'Copying is not allowed during the test.');},true);});
+document.addEventListener('paste',function(e){stop(e,'Pasting is not allowed during the test. Please type your own answer.');},true);
+document.addEventListener('drop',function(e){stop(e);},true);
+document.addEventListener('dragstart',function(e){stop(e);},true);
+document.addEventListener('contextmenu',function(e){stop(e,'Right-click is turned off during the test.');},true);
+document.addEventListener('selectstart',function(e){if(on&&!ok(e.target))e.preventDefault();},true);
+document.addEventListener('keydown',function(e){if(!on)return;var k=String(e.key||'').toLowerCase(),c=e.ctrlKey||e.metaKey;
+ if(k==='f12'||(c&&e.shiftKey&&'ijc'.indexOf(k)>-1&&k.length===1)||(c&&'uspfg'.indexOf(k)>-1&&k.length===1)||(c&&'cxv'.indexOf(k)>-1&&k.length===1)||(c&&k==='a'&&!ok(e.target))){stop(e,'That shortcut is turned off during the test.');return;}
+ if(k==='printscreen'){try{navigator.clipboard.writeText('Screenshots are not allowed during the test.');}catch(x){}say('Screenshots are not allowed during the test.');}},true);
+function left(){if(!on)return;AC.leaves++;}
+function back(){if(on&&AC.leaves)say('Please stay on the test page. You left it '+AC.leaves+' time'+(AC.leaves>1?'s':'')+'.');}
+document.addEventListener('visibilitychange',function(){if(document.hidden)left();else back();});
+var st=document.createElement('style');st.textContent='body.acx *:not(input):not(textarea){-webkit-user-select:none!important;user-select:none!important}@media print{body.acx{display:none!important}}';document.head.appendChild(st);
+AC.on=function(){on=true;try{document.body.classList.add('acx');}catch(e){}};
+AC.off=function(){on=false;try{document.body.classList.remove('acx');}catch(e){}};
+window.AC=AC;AC.on();})();
+</script>
