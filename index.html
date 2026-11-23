@@ -369,7 +369,7 @@ function vTest(){
   const s=cur(),a=S.ans[s.id]=S.ans[s.id]||{};
   if(!S.secStart[s.id]){S.secStart[s.id]=Date.now();persist();}
   const head='<div class="tbar"><div class="in"><img src="'+LOGO+'" alt="Excel"><div class="steps" aria-label="Progress">'+secs().map((x,i)=>'<span class="'+(i<S.sec?'done':i===S.sec?'now':'')+'" title="'+esc(x.title)+'"></span>').join('')+'</div>'+(s.minutes?'<span class="timer" id="timer">--:--</span>':'')+'</div></div>';
-  let body='<div class="sechead"><div class="badge" style="background:'+(COLORS[s.id]||'var(--teal)')+'">'+(S.kind==='kids'?(S.sec+1):s.id)+'</div><div><h2>'+esc(s.title)+'</h2><p>'+esc(s.intro||'')+(s.minutes?' You have '+s.minutes+' minutes.':'')+'</p></div></div>';
+  let body='<div class="sechead"><div class="badge" style="background:'+(COLORS[s.id]||'var(--teal)')+'">'+(S.kind==='kids'?(/^X/.test(s.id)?'★':secs().slice(0,S.sec).filter(x=>!/^X/.test(x.id)).length+1):s.id)+'</div><div><h2>'+esc(s.title)+'</h2><p>'+esc(s.intro||'')+(s.minutes?' You have '+s.minutes+' minutes.':'')+'</p></div></div>';
   if(s.type==='mcq'&&s.adaptive&&s.bands){const bi=Math.min(S.band||0,s.bands.length-1),b=s.bands[bi];S.lastAct=Date.now();
     body+='<div class="bandnote"><b class="pt">Part '+(bi+1)+'</b><span>The questions get harder as you go. If you don’t know an answer, choose <b>I don’t know</b>. Guessing makes your level less accurate.</span></div>'+s.items.map((it,i)=>i+1>=b.from&&i+1<=b.to?qMcq(s,it,i,a):'').join('');}
   else if(s.type==='mcq')body+=s.items.map((it,i)=>qMcq(s,it,i,a)).join('');
@@ -423,7 +423,7 @@ async function nextSection(auto){
   moving=true;clearTimeout(saveT);clearInterval(tick);
   await saveSection(s.id);
   moving=false;
-  if(S.sec<secs().length-1){S.sec++;if(S.kind==='kids'&&cur().id==='C'){let show=false;try{show=!!(await call('kgate',{id:S.id,key:S.key})).show;}catch(e){}if(!show&&S.sec<secs().length-1)S.sec++;}persist();render();}else finish();
+  if(S.sec<secs().length-1){S.sec++;if(S.kind==='kids'){while(/^(C|X\d)$/.test(cur().id)){let show=false;try{show=!!(await call('kgate',{id:S.id,key:S.key,section:cur().id})).show;}catch(e){}if(show||S.sec>=secs().length-1)break;S.sec++;}}persist();render();}else finish();
 }
 async function finish(){
   app.insertAdjacentHTML('beforeend','<div style="position:fixed;inset:0;background:rgba(246,249,251,.9);display:grid;place-items:center;z-index:70"><div class="card center"><h2 style="color:var(--navy)">Sending your test…</h2><p class="hint">Please keep this page open.</p></div></div>');
